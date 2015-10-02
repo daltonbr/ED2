@@ -17,10 +17,21 @@ cada registro.
 
 #include <stdio.h>
 
+struct cadastro
+{
+    char nome[15]
+    char sobrenome[15]
+    char endereco[26]
+    int numero
+};
+typedef struct cadastro cadastro;
+
+
 int main (void)
 {
     //int escolha = 1;
     FILE *arquivo;
+    
 
     if ((arquivo = fopen("fixo.dad","w+b")) == NULL)
     {
