@@ -13,7 +13,7 @@ int main() {
     int format; // 0 -> HEX, 1 -> ASCII
     int offset;
 
-    if((out = fopen("output.txt", "w+")) == NULL) {
+    if((out = fopen("output.txt", "r+")) == NULL) {
         puts("Arquivo nao pode ser aberto");
         return 0;
     }
