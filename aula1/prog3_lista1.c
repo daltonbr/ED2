@@ -16,6 +16,7 @@ void PrintToEOF(FILE *file)
 int main() {
 
     FILE *out;
+    
     char ch;
     int numberOfLines = 1;
 /*
@@ -41,6 +42,7 @@ int main() {
         printf("Arquivo aberto com sucesso!\n");
         printf("Digite o numero de quebra de linhas: ");
         scanf("%d", &numberOfLines);
+
     }
 
     // jumps to the EOF, and move 2 positions back

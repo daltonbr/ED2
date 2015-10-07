@@ -16,13 +16,14 @@ cada registro.
 */
 
 #include <stdio.h>
+#include <string.h>
 
 struct cadastro
 {
-    char nome[15]
-    char sobrenome[15]
-    char endereco[26]
-    int numero
+    char nome[15];
+    char sobrenome[15];
+    char endereco[26];
+    int numero;
 };
 typedef struct cadastro cadastro;
 
@@ -31,16 +32,31 @@ int main (void)
 {
     //int escolha = 1;
     FILE *arquivo;
-    
+    cadastro bufferCadastro;
+
+    //char c[] = "this is a string";
+    char buffer[100];
 
     if ((arquivo = fopen("fixo.dad","w+b")) == NULL)
     {
-        print("Erro: Arquivo nao aberto!");
+        printf("Erro: Arquivo nao aberto!\n");
+        return 0;
     }
     else
     {
-        printf("Arquivo aberto com sucesso!");
+        printf("Arquivo aberto com sucesso!\n");
     }
+
+
+    /* Write data to the file */
+    //fwrite(c, strlen(c) + 1, 1, fp);
+
+    /* Seek to the beginning of the file */
+    fseek(arquivo, SEEK_SET, 0);
+
+    /* Read and display data */
+    fread(buffer, 10, 1, arquivo);
+    printf("%s\n", buffer);
 
     fclose(arquivo);
 
