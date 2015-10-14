@@ -27,17 +27,35 @@ struct cadastro
 };
 typedef struct cadastro cadastro;
 
+void imprimeRegistro(char *buffer)
+{
+    //cadastro *cadastroBuffer;
+    printf("%s\n", buffer);
+
+    //strncpy(cadastroBuffer->nome, buffer, 15);
+    //strncpy(cadastroBuffer->sobrenome, buffer+15, 15);
+
+    //printf("\nNome: %s", cadastroBuffer->nome);
+    //printf("\nSobrenome: %s", cadastroBuffer->sobrenome);
+    //printf("\nEndereco: %s", cadastroBuffer->endereco);
+    ///printf("\nNumero: %d", cadastroBuffer->numero);
+}
+
 
 int main (void)
 {
     //int escolha = 1;
     FILE *arquivo;
-    cadastro bufferCadastro;
+    //cadastro *bufferCadastro;
 
     //char c[] = "this is a string";
-    char buffer[100];
+    char buffer[60];
+    int opcao;
+    int tamanhoRegistro, offset;
 
-    if ((arquivo = fopen("fixo.dad","w+b")) == NULL)
+    tamanhoRegistro = sizeof(cadastro);
+// r+
+    if ((arquivo = fopen("fixo.dad","r+")) == NULL)
     {
         printf("Erro: Arquivo nao aberto!\n");
         return 0;
@@ -47,16 +65,26 @@ int main (void)
         printf("Arquivo aberto com sucesso!\n");
     }
 
+    printf("\nTamanho do Struct: %d", tamanhoRegistro);
 
-    /* Write data to the file */
-    //fwrite(c, strlen(c) + 1, 1, fp);
+    printf("\nDigite o registro a ser lido (1 a 10):");
+    scanf("%d", &opcao);
 
     /* Seek to the beginning of the file */
-    fseek(arquivo, SEEK_SET, 0);
+    offset = (opcao-1) * tamanhoRegistro;
+    fseek(arquivo, offset, SEEK_SET);  //coloca o cursor na posicao a ser lido o registro
 
     /* Read and display data */
-    fread(buffer, 10, 1, arquivo);
-    printf("%s\n", buffer);
+    fread(buffer, tamanhoRegistro, 1, arquivo);
+
+    imprimeRegistro(buffer);
+
+    //strncpy(cadastroBuffer->nome, buffer, 15);
+    //strncpy(cadastroBuffer->sobrenome, buffer+15, 15);
+
+    //printf("\nNome: %s", cadastroBuffer->nome);
+    //printf("\nSobrenome: %s", cadastroBuffer->sobrenome);
+
 
     fclose(arquivo);
 
