@@ -17,6 +17,7 @@ cada registro.
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 struct cadastro
 {
@@ -29,32 +30,41 @@ typedef struct cadastro cadastro;
 
 void imprimeRegistro(char *buffer)
 {
-    //cadastro *cadastroBuffer;
+    cadastro cadastroBuffer;
+    char aux[4];
+    unsigned int numero;
     printf("%s\n", buffer);
 
-    //strncpy(cadastroBuffer->nome, buffer, 15);
-    //strncpy(cadastroBuffer->sobrenome, buffer+15, 15);
+    strncpy(cadastroBuffer.nome, buffer, 15);
+    strncpy(cadastroBuffer.sobrenome, buffer+15, 15);
+    strncpy(cadastroBuffer.endereco, buffer+30, 26);
+    strncpy(aux, buffer+56, 4);
 
-    //printf("\nNome: %s", cadastroBuffer->nome);
-    //printf("\nSobrenome: %s", cadastroBuffer->sobrenome);
-    //printf("\nEndereco: %s", cadastroBuffer->endereco);
+    //fread(buffer+56, numero, 1, fp);
+
+    printf("\nNome: %s", cadastroBuffer.nome);
+    printf("\nSobrenome: %s", cadastroBuffer.sobrenome);
+    printf("\nEndereco: %s", cadastroBuffer.endereco);
+
+    numero = (unsigned int)*aux;
+
+    printf("\nNumero (string): %s", aux);
+    printf("\nNumero: %d - (imprimindo sign Int)", numero);
+    printf("\nNumero: %u (unsigned int)\n", numero);
     ///printf("\nNumero: %d", cadastroBuffer->numero);
 }
-
 
 int main (void)
 {
     //int escolha = 1;
     FILE *arquivo;
-    //cadastro *bufferCadastro;
 
-    //char c[] = "this is a string";
     char buffer[60];
     int opcao;
     int tamanhoRegistro, offset;
 
     tamanhoRegistro = sizeof(cadastro);
-// r+
+
     if ((arquivo = fopen("fixo.dad","r+")) == NULL)
     {
         printf("Erro: Arquivo nao aberto!\n");
@@ -77,14 +87,8 @@ int main (void)
     /* Read and display data */
     fread(buffer, tamanhoRegistro, 1, arquivo);
 
+    //bufferCadastro = buffer;
     imprimeRegistro(buffer);
-
-    //strncpy(cadastroBuffer->nome, buffer, 15);
-    //strncpy(cadastroBuffer->sobrenome, buffer+15, 15);
-
-    //printf("\nNome: %s", cadastroBuffer->nome);
-    //printf("\nSobrenome: %s", cadastroBuffer->sobrenome);
-
 
     fclose(arquivo);
 
