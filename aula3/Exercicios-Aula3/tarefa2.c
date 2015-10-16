@@ -34,7 +34,7 @@ int main() {
     return 1;
   } else {
 
-    puts("Insert the desires struct number: ");
+    puts("Insert the desired struct number: ");
     scanf("%d", &choice);
 
     // Go to the desired position on the file
