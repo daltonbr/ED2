@@ -14,14 +14,15 @@ int fetchField(char *buffer, char *dest, int offset);
 
 int main() {
 
-  int arr[10], choice, offset, regSize;
+  int arr[15],  //must exceed the max number of registers
+      choice, offset, regSize;
   FILE *arq;
 
-  char *name;
-  char *surName;
-  char *address;
-  char *number;
-  char buffer[100];
+  char name[100];
+  char surName[100];
+  char address[100];
+  char number[100];
+  char buffer[300];
 
   // opening the data file
   if((arq = fopen("campo_var_reg_var.dad", "r+")) == NULL) {
@@ -53,6 +54,12 @@ int main() {
   //Debug: checking the buffer
   puts(buffer);
 
+  fetchFields(buffer, name, surName, address, number);
+
+  printf("Name: %s\n", name);
+  printf("SurName: %s\n", surName);
+  printf("Address: %s\n", address);
+  printf("Number: %s\n", number);
   return 0;
 }
 
@@ -106,7 +113,6 @@ int getRegisterOffset (int regNum, int *indexMap)
 int fetchField(char *buffer, char *dest, int offset) {
 
   int size = 0;
-
   int i = offset;
 
   while (buffer[i] != '|') {
