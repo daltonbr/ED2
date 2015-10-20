@@ -10,13 +10,27 @@ Alunos Dalton Lima & Lucas Pinheiro
 
 struct contato{
   int codigo;
-  char *nome;
-  char *telefone;
+  char nome[128];
+  char telefone[16];
 };
+typedef struct contato contato;
+
+contato readContact()
+{
+  contato buffer;
+  printf("\nDigite o nome: ");
+  fgets(buffer.nome, sizeof(buffer.nome), stdin);
+  //scanf("%s", );
+
+  printf("\nDigite o telefone: ");
+  fgets(buffer.telefone, sizeof(buffer.telefone), stdin);
+  return buffer;
+}
 
 int main()
 {
   FILE *arq;
+  contato buffer;
 
   if ( (arq = fopen("dados.dat", "r+")) == NULL )
   {
@@ -28,7 +42,10 @@ int main()
     printf("Arquivo aberto com sucesso!\n");
   }
 
+  buffer = readContact();
 
+  puts(buffer.nome);
+  puts(buffer.telefone);
 
   return 0;
 }
