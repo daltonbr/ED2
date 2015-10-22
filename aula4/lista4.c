@@ -66,11 +66,78 @@ int concatenateReg (contato reg, char *buffer)
   return length;
 }
 
+  void clearScreen()
+  {
+    system("clear");
+  }
+
+  int drawMenu()
+  {
+    clearScreen();
+    int opcao = -1;
+    printf("\n --===============================--");
+    printf("\n --==     AGENDA DOS AMIGOS     ==--");
+    printf("\n --===============================--");
+    printf("\n --== 1: Insercao Registro      ==--");
+    printf("\n --== 2: Remocao Registro       ==--");
+    printf("\n --== 3: Compactacao do Arquivo ==--");
+    printf("\n --== 0: Sair                   ==--");
+    printf("\n --===============================--");
+    printf("\nDigite uma opcao: ");
+    scanf("%d", &opcao);
+    return opcao;
+  }
+
+// a menu to switch through some options...
+void menu(int opcao, contato reg, char *buffer)
+{
+  int sizeReg;
+  switch (opcao) {
+    case 1: //insercao
+    {
+      printf("\ninsercao");
+
+      reg = readContact();
+
+      sizeReg = concatenateReg(reg, buffer);  //mount the register in order to be stored
+      printf("\nDebug: Registro a ser escrito: %s", buffer);
+      printf("\nDebug: Tamanho do Registro a ser escrito: %d \n", sizeReg);
+
+      getchar();
+      break;
+    }
+    case 2: //remocao
+    {
+      printf("\nremocao");
+      getchar();
+      break;
+    }
+    case 3: //compactacao
+    {
+      printf("\ncompactacao");
+      getchar();
+      break;
+    }
+    case 0: // exit
+    {
+      printf("\nSaindo do programa!\n");
+      getchar();
+      break;
+    }
+    default:  // invalid choices
+    {
+      printf("\nEscolha invalida!");
+      getchar();
+      break;
+    }
+  }
+}
+
 int main()
 {
   FILE *arq;
   contato reg;
-  int sizeReg;
+  int sizeReg, opcao = -1;;
   char buffer[256];
   //buffer = NULL;
 
@@ -85,17 +152,12 @@ int main()
     printf("Arquivo aberto com sucesso!\n");
   }
 
-  reg = readContact();
-  /* Debug
-  printf("%d\n", reg.codigo);
-  puts(reg.nome);
-  puts(reg.telefone);
-  */
 
-  sizeReg = concatenateReg(reg, buffer);  //mount the register in order to be stored
-
-  printf("\nDebug: Registro a ser escrito: %s", buffer);
-  printf("\nDebug: Tamanho do Registro a ser escrito: %d \n", sizeReg);
+  while (opcao != 0 ) // menu: 0 to exit
+  {
+    opcao = drawMenu();
+    menu(opcao, reg, buffer);
+  }
 
   return 0;
 }
