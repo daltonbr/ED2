@@ -24,11 +24,11 @@ contato readContact()
 
   printf("\nDigite o codigo: ");
   scanf("%d", &reg.codigo);
-  printf("\nDigite o nome: ");
+  printf("Digite o nome: ");
   fpurge(stdin);   // fflush(stdin)  // no windows
   fgets(reg.nome, sizeof(reg.nome), stdin);
 
-  printf("\nDigite o telefone: ");
+  printf("Digite o telefone: ");
   fgets(reg.telefone, sizeof(reg.telefone), stdin);
   return reg;
 }
@@ -48,14 +48,19 @@ int concatenateReg (contato reg, char *buffer)
   //calculating the size of the register
   length = strlen(reg.nome) -1;   //not counting the terminator
   length += strlen(reg.telefone) -1;
-  length += sizeof(int) + 4; // adds the 'key' plus the 4 pipes '|'
+  length += sizeof(int) + 2; // adds the 'codigo' plus the 2 pipes '|' = 6
 
-  //concatenating
-  offset = strlen(reg.nome)-1;
-  strncpy(buffer, reg.nome, offset);
-  buffer[offset] = '|';
-  strncpy(buffer+offset+1, reg.telefone, strlen(reg.telefone)-1 ) ;
-  offset += strlen(reg.telefone);
+  //concatenating: 4bytes offset + '@' + 4bytes Codigo + name + '|' + phone + '|'
+  offset += snprintf ( buffer+offset, 5, "%04x", length);  //converting int to hex (string)
+  buffer[offset] = '@'; offset++;
+  offset += snprintf ( buffer+offset, 5, "%04x", reg.codigo);  //converting int to hex (string)
+
+  strncpy(buffer+offset, reg.nome, strlen(reg.nome)-1);
+  offset += strlen(reg.nome)-1;
+  buffer[offset] = '|'; offset++;
+
+  strncpy(buffer+offset, reg.telefone, strlen(reg.telefone)-1 ) ;
+  offset += strlen(reg.telefone)-1;
   buffer[offset] = '|';
 
   return length;
@@ -81,15 +86,15 @@ int main()
   }
 
   reg = readContact();
-
+  /* Debug
   printf("%d\n", reg.codigo);
   puts(reg.nome);
   puts(reg.telefone);
+  */
 
   sizeReg = concatenateReg(reg, buffer);  //mount the register in order to be stored
 
-  printf("\nDebug: Registro a ser escrito: %s \n", buffer);
-  
+  printf("\nDebug: Registro a ser escrito: %s", buffer);
   printf("\nDebug: Tamanho do Registro a ser escrito: %d \n", sizeReg);
 
   return 0;
