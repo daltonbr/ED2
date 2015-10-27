@@ -7,6 +7,7 @@ Alunos Dalton Lima & Lucas Pinheiro
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>  // fsync
 
 struct contato{
   int codigo;
@@ -15,8 +16,16 @@ struct contato{
 };
 typedef struct contato contato;
 
+//function pre Declarations
 int sizeOfReg(contato reg);
 contato readContact();
+void clearScreen();
+int drawMenu();
+void menu(int opcao, contato reg, char *buffer, FILE *arq);
+void createIndexMap(FILE* arq, int arr[]);
+void printIndexMap(int arr[]);
+int nextAvailable (FILE *arq, int *indexArray, int sizeReg);
+
 
 contato readContact()
 {
@@ -75,34 +84,38 @@ int concatenateReg (contato reg, char *buffer)
   {
     clearScreen();
     int opcao = -1;
-    printf("\n --===============================--");
-    printf("\n --==     AGENDA DOS AMIGOS     ==--");
-    printf("\n --===============================--");
-    printf("\n --== 1: Insercao Registro      ==--");
-    printf("\n --== 2: Remocao Registro       ==--");
-    printf("\n --== 3: Compactacao do Arquivo ==--");
-    printf("\n --== 0: Sair                   ==--");
-    printf("\n --===============================--");
+    printf("\n --===========================================--");
+    printf("\n --==            AGENDA DOS AMIGOS          ==--");
+    printf("\n --===========================================--");
+    printf("\n --== 1: Insercao Registro                  ==--");
+    printf("\n --== 2: Remocao Registro                   ==--");
+    printf("\n --== 3: Compactacao do Arquivo             ==--");
+    printf("\n --== 4: Debug: Created and Print IndexList ==--");
+    printf("\n --== 0: Sair                               ==--");
+    printf("\n --===========================================--");
     printf("\nDigite uma opcao: ");
     scanf("%d", &opcao);
     return opcao;
   }
 
 // a menu to switch through some options...
-void menu(int opcao, contato reg, char *buffer)
+void menu(int opcao, contato reg, char *buffer, FILE *arq)
 {
-  int sizeReg;
+  int sizeReg, nextPositionAvailable, index[1000];
   switch (opcao) {
     case 1: //insercao
     {
       printf("\ninsercao");
 
-      reg = readContact();
+      reg = readContact();  // read from the user input
 
       sizeReg = concatenateReg(reg, buffer);  //mount the register in order to be stored
       printf("\nDebug: Registro a ser escrito: %s", buffer);
       printf("\nDebug: Tamanho do Registro a ser escrito: %d \n", sizeReg);
+      createIndexMap(arq, index);
+      nextPositionAvailable = nextAvailable(arq, index, sizeReg);
 
+      fprintf(arq, "%s", buffer);
       getchar();
       break;
     }
@@ -133,13 +146,70 @@ void menu(int opcao, contato reg, char *buffer)
   }
 }
 
+// Function that keeps the offsets for the registers in the file
+void createIndexMap(FILE* arq, int arr[]) {
+
+  //unsigned int *size;
+  int size = 0;
+  int position = 1;
+
+  arr[0] = 1; //the first register is always at the start of the file after the first byte
+
+  printf("\nCreating IndexMap...");
+  while (size != EOF) {
+    if( (fscanf (arq, "%04x", &size) )!= EOF ) //Return NULL when reach EOF
+    {
+        arr[position] = ((int)size) +4; // add 4 to account for the next offset slot (int)
+        printf("\nDEBUG: #%d - Value: %d - Size: %d", position, arr[position], size);  //Debug Only
+        if (size != EOF) {
+          position++;
+          fseek(arq, (int)size, 1);  //parameter SET_CUR won't work. Why?  respositioning the file pointer
+        }
+    }
+    else
+    {
+        printf("\nDebug: EOF reached");
+        size = -1;
+    }
+  }
+  printf("\nIndexList created!\n");
+}
+
+// Debug to check the IndexMap
+void printIndexMap(int arr[])
+{
+  int i=0;
+  printf("\nPrinting IndexMap");
+  while (arr[i] != 0)
+  {
+      printf("\n #%d - Value: %d", i, arr[i]);
+      i++;
+      // if ( arr[i] == 0 )
+      // {
+      //   break;
+      // }
+  }
+  printf("\nEnd of IndexMap");
+}
+
+int nextAvailable (FILE *arq, int *indexArray, int sizeReg)
+{
+  int offset = 0, i = 0;
+  while (indexArray[i] != 0)
+  {
+    offset += indexArray[i];
+    i++;
+  }
+  return offset;
+}
+
 int main()
 {
   FILE *arq;
   contato reg;
-  int sizeReg, opcao = -1;;
+  int sizeReg, opcao = -1;
+  int index[1000];
   char buffer[256];
-  //buffer = NULL;
 
   if ( (arq = fopen("dados.dat", "r+")) == NULL )
   {
@@ -152,11 +222,15 @@ int main()
     printf("Arquivo aberto com sucesso!\n");
   }
 
+//  created and print a IndexList
+  createIndexMap(arq, index);
+  printIndexMap(index);
+  getchar();
 
   while (opcao != 0 ) // menu: 0 to exit
   {
     opcao = drawMenu();
-    menu(opcao, reg, buffer);
+    menu(opcao, reg, buffer, arq);
   }
 
   return 0;
