@@ -16,13 +16,16 @@ struct contato{
 };
 typedef struct contato contato;
 
+// global IndexMap
+int indexMap[1000];
+
 //function pre Declarations
 int sizeOfReg(contato reg);
 contato readContact();
 void clearScreen();
 int drawMenu();
 void menu(int opcao, contato reg, char *buffer, FILE *arq);
-void createIndexMap(FILE* arq, int arr[]);
+void createIndexMap(FILE* arq);
 void printIndexMap(int arr[]);
 int nextAvailable (FILE *arq, int *indexArray, int sizeReg);
 
@@ -50,7 +53,7 @@ int sizeOfReg(contato reg)
   return length;
 }
 
-int concatenateReg (contato reg, char *buffer)
+int concatenateReg (contato reg, char *buffer, FILE* arq)
 {
   int length = 0, offset = 0;
 
@@ -71,6 +74,9 @@ int concatenateReg (contato reg, char *buffer)
   strncpy(buffer+offset, reg.telefone, strlen(reg.telefone)-1 ) ;
   offset += strlen(reg.telefone)-1;
   buffer[offset] = '|';
+  buffer[offset+1] = '\0';
+
+  fwrite(buffer, strlen(buffer), 1, arq);
 
   return length;
 }
@@ -101,7 +107,7 @@ int concatenateReg (contato reg, char *buffer)
 // a menu to switch through some options...
 void menu(int opcao, contato reg, char *buffer, FILE *arq)
 {
-  int sizeReg, nextPositionAvailable, index[1000];
+  int sizeReg, nextPositionAvailable;
   switch (opcao) {
     case 1: //insercao
     {
@@ -109,13 +115,13 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
 
       reg = readContact();  // read from the user input
 
-      sizeReg = concatenateReg(reg, buffer);  //mount the register in order to be stored
+      sizeReg = concatenateReg(reg, buffer, arq);  //mount the register in order to be stored
       printf("\nDebug: Registro a ser escrito: %s", buffer);
       printf("\nDebug: Tamanho do Registro a ser escrito: %d \n", sizeReg);
-      createIndexMap(arq, index);
-      nextPositionAvailable = nextAvailable(arq, index, sizeReg);
+      insertIntoIndexMap(sizeReg);
+      printIndexMap(arq);
+      nextPositionAvailable = nextAvailable(arq, indexMap, sizeReg);
 
-      fprintf(arq, "%s", buffer);
       getchar();
       break;
     }
@@ -146,49 +152,59 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
   }
 }
 
+void insertIntoIndexMap(int offset) {
+
+  
+
+}
+
 // Function that keeps the offsets for the registers in the file
-void createIndexMap(FILE* arq, int arr[]) {
+void createIndexMap(FILE* arq) {
 
-  //unsigned int *size;
-  int size = 0;
   int position = 1;
+  int size;
 
-  arr[0] = 1; //the first register is always at the start of the file after the first byte
+  indexMap[0] = 1; // the first register is always at the start of the file after the first byte
 
   printf("\nCreating IndexMap...");
+
+  // check if the file is empty
+  if ((fscanf (arq, "%04x", &size)) == EOF) {
+    indexMap[0] = -1;
+    return;
+  }
+
   while (size != EOF) {
-    if( (fscanf (arq, "%04x", &size) )!= EOF ) //Return NULL when reach EOF
+    if((fscanf(arq, "%04x", &size)) != EOF) //Return NULL when reach EOF
     {
-        arr[position] = ((int)size) +4; // add 4 to account for the next offset slot (int)
-        printf("\nDEBUG: #%d - Value: %d - Size: %d", position, arr[position], size);  //Debug Only
+        indexMap[position] = size + 4; // add 4 to account for the next offset slot (int)
+        printf("\nDEBUG: #%d - Value: %d - Size: %d", position, indexMap[position], size);  //Debug Only
         if (size != EOF) {
+          fseek(arq, indexMap[position], 1); // we skip to next register
           position++;
-          fseek(arq, (int)size, 1);  //parameter SET_CUR won't work. Why?  respositioning the file pointer
         }
     }
     else
     {
         printf("\nDebug: EOF reached");
         size = -1;
+        indexMap[position] = size;
     }
   }
   printf("\nIndexList created!\n");
 }
 
 // Debug to check the IndexMap
-void printIndexMap(int arr[])
-{
-  int i=0;
+void printIndexMap() {
+  int i = 0;
+
   printf("\nPrinting IndexMap");
-  while (arr[i] != 0)
-  {
-      printf("\n #%d - Value: %d", i, arr[i]);
-      i++;
-      // if ( arr[i] == 0 )
-      // {
-      //   break;
-      // }
+
+  while (indexMap[i] != -1) {
+    printf("\n #%d - Value: %d", i, indexMap[i]);
+    i++;
   }
+
   printf("\nEnd of IndexMap");
 }
 
@@ -208,7 +224,6 @@ int main()
   FILE *arq;
   contato reg;
   int sizeReg, opcao = -1;
-  int index[1000];
   char buffer[256];
 
   if ( (arq = fopen("dados.dat", "r+")) == NULL )
@@ -222,9 +237,9 @@ int main()
     printf("Arquivo aberto com sucesso!\n");
   }
 
-//  created and print a IndexList
-  createIndexMap(arq, index);
-  printIndexMap(index);
+  // created and print a IndexList
+  createIndexMap(arq);
+  printIndexMap(indexMap);
   getchar();
 
   while (opcao != 0 ) // menu: 0 to exit
