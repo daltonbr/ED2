@@ -17,7 +17,7 @@ struct contato{
 typedef struct contato contato;
 
 // global IndexMap
-int indexMap[1000][2];
+int indexMap[1000][4];
 
 //function pre Declarations
 int sizeOfReg(contato reg);
@@ -163,7 +163,7 @@ void insertIntoIndexMap(int offset) {
 void createIndexMap(FILE* arq) {
 
   int position = 1;
-  int size;
+  int size, codigo, offsetFromStart = 0;
   char available;
 
   indexMap[0][0] = 1; // the first register is always at the start of the file after the first byte
@@ -172,20 +172,27 @@ void createIndexMap(FILE* arq) {
 
   // check if the file is empty
   if ((fscanf (arq, "%04x", &size)) == EOF) {
-    indexMap[0][0] = -1;
-    indexMap[0][1] = 42;  // 42 = *
+    indexMap[0][0] = -1;  // offset to next (or -1 to end of the indexMap)
+    indexMap[0][1] = 42;  // 42 = *   - Validation char
+
     return;
   }
 
   while (size != EOF) {
     if((fscanf(arq, "%04x", &size)) != EOF) //Return NULL when reach EOF
     {
+        offsetFromStart += size + 5;   // sums the current offset since the beggining of the file
         indexMap[position][0] = size + 4; // add 4 to account for the next offset slot (int)
         fscanf(arq, "%c", &available);  // read the validation character
+        fscanf(arq, "%04x", &codigo);   // read the 'Codigo' (key index)
         indexMap[position][1] = available;
-        printf("\nDEBUG: #%d - Value: %d - Size: %d - Available: %c", position, indexMap[position][0], size, indexMap[position][1]);  //Debug Only
+        indexMap[position][2] = codigo;
+        indexMap[position][3] = offsetFromStart;
+        printf("\nDEBUG: #%d - Value: %d - Size: %d - Available: %c - Codigo %d"
+                  , position, indexMap[position][0], size, indexMap[position][1]
+                  , indexMap[position][2]);  //Debug Only
         if (size != EOF) {
-          fseek(arq, indexMap[position][0], 1); // we skip to next register
+          fseek(arq, indexMap[position][0]-4, 1); // we skip to next register (-4 from the )
           position++;
         }
     }
@@ -206,7 +213,8 @@ void printIndexMap() {
   printf("\nPrinting IndexMap");
 
   while (indexMap[i][0] != -1) {
-    printf("\n #%d - Value: %d - Available: %c", i, indexMap[i][0], indexMap[i][1]);
+    printf("\n #%d - Value: %d - Available: %c - Codigo %d - OffsetFromTheStart: %d"
+            , i, indexMap[i][0], indexMap[i][1], indexMap[i][2], indexMap[i][3]);
     i++;
   }
 
