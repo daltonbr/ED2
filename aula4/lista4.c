@@ -17,7 +17,7 @@ struct contato{
 typedef struct contato contato;
 
 // global IndexMap
-int indexMap[1000][4];
+int indexMap[1000][4]; // 0 size of the register, 1 validation char, 2 Codigo, 3 offsetFromStart
 
 //function pre Declarations
 int sizeOfReg(contato reg);
@@ -108,7 +108,7 @@ int concatenateReg (contato reg, char *buffer, FILE* arq)
 // a menu to switch through some options...
 void menu(int opcao, contato reg, char *buffer, FILE *arq)
 {
-  int sizeReg, nextPositionAvailable;
+  int sizeReg, nextPositionAvailable, remover, i;
   switch (opcao) {
     case 1: //insercao
     {
@@ -128,7 +128,32 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
     }
     case 2: //remocao
     {
-      printf("\nremocao");
+      printf("\n -----====== REMOCAO de Registro =====----- ");
+      createIndexMap(arq);
+      printIndexMap();
+      printf("\nDigite o Codigo do registro a ser removido:");
+      fpurge(stdin);   // fflush(stdin)  // no windows
+      scanf("%d", &remover);
+      i = 1;
+      while (indexMap[i][2] != remover && indexMap[i][0] != -1 )  //code not found AND not EOF
+      {
+        printf("indexMap[%d][2] = %d - ", i, indexMap[i][2]);
+        i++;
+      }
+      if (indexMap[i][2] == remover )
+      {
+        indexMap[i][1] = 42; // set * to the desired register
+        fseek(arq,indexMap[i][3],0);  //position the cursor at the register to be removed
+        fseek(arq, 4, 1);   // move 4 bytes to move to the validation char (@ or *)
+        fwrite("*" , 1 , sizeof(char) , arq );  // writes * to remove logically the register
+        printf("\nRegistro apagado");
+        printIndexMap();
+      }
+      if ( indexMap[i][0] == -1 ) // if reachs the EOF, so the register wasn't founded
+      {
+        printf("Registro nao encontrado!");
+      }
+      fpurge(stdin);   // fflush(stdin)  // no windows
       getchar();
       break;
     }
@@ -138,9 +163,17 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
       getchar();
       break;
     }
+    case 4: // Debug Renew indexMap
+    {
+      //createIndexMap(arq);
+      printIndexMap();
+      fpurge(stdin);   // fflush(stdin)  // no windows
+      getchar();
+      break;
+    }
     case 0: // exit
     {
-      printf("\nSaindo do programa!\n");
+      printf("\nSaindo do programa!");
       getchar();
       break;
     }
@@ -163,11 +196,11 @@ void insertIntoIndexMap(int offset) {
 void createIndexMap(FILE* arq) {
 
   int position = 1;
-  int size, codigo, offsetFromStart = 0;
+  int size, codigo, offsetFromStart = 0;  // initial offset for the first reg
   char available;
 
-  indexMap[0][0] = 1; // the first register is always at the start of the file after the first byte
-
+  indexMap[0][0] = 0; // the first register is always at the start of the file after the first byte
+  //indexMap[0][3] = 1;
   printf("\nCreating IndexMap...");
 
   // check if the file is empty
@@ -181,18 +214,19 @@ void createIndexMap(FILE* arq) {
   while (size != EOF) {
     if((fscanf(arq, "%04x", &size)) != EOF) //Return NULL when reach EOF
     {
-        offsetFromStart += size + 5;   // sums the current offset since the beggining of the file
+        indexMap[position][3] = offsetFromStart;
+        offsetFromStart += size + 4;   // sums the current offset since the beggining of the file
         indexMap[position][0] = size + 4; // add 4 to account for the next offset slot (int)
         fscanf(arq, "%c", &available);  // read the validation character
         fscanf(arq, "%04x", &codigo);   // read the 'Codigo' (key index)
         indexMap[position][1] = available;
         indexMap[position][2] = codigo;
-        indexMap[position][3] = offsetFromStart;
-        printf("\nDEBUG: #%d - Value: %d - Size: %d - Available: %c - Codigo %d"
+
+        printf("\nDEBUG: #%d - Value: %d - Size: %d - Available: %c - Codigo %d - OffsetFromStart: %d"
                   , position, indexMap[position][0], size, indexMap[position][1]
-                  , indexMap[position][2]);  //Debug Only
+                  , indexMap[position][2], indexMap[position][3]);  //Debug Only
         if (size != EOF) {
-          fseek(arq, indexMap[position][0]-4, 1); // we skip to next register (-4 from the )
+          fseek(arq, indexMap[position][0]-4, 1); // we skip to next register (-4 from the Codigo )
           position++;
         }
     }
@@ -200,7 +234,7 @@ void createIndexMap(FILE* arq) {
     {
         printf("\nDebug: EOF reached");
         size = -1;
-        indexMap[position][0] = size;  // -1 determines the end od the indexMap
+        indexMap[position][0] = size;  // -1 determines the end of the indexMap
     }
   }
   printf("\nIndexList created!\n");
