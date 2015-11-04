@@ -17,7 +17,7 @@ struct contato{
 typedef struct contato contato;
 
 // global IndexMap
-int indexMap[1000];
+int indexMap[1000][2];
 
 //function pre Declarations
 int sizeOfReg(contato reg);
@@ -26,8 +26,9 @@ void clearScreen();
 int drawMenu();
 void menu(int opcao, contato reg, char *buffer, FILE *arq);
 void createIndexMap(FILE* arq);
-void printIndexMap(int arr[]);
-int nextAvailable (FILE *arq, int *indexArray, int sizeReg);
+void printIndexMap();
+int nextAvailable (FILE *arq, int sizeReg);
+void insertIntoIndexMap(int offset);
 
 
 contato readContact()
@@ -119,8 +120,8 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
       printf("\nDebug: Registro a ser escrito: %s", buffer);
       printf("\nDebug: Tamanho do Registro a ser escrito: %d \n", sizeReg);
       insertIntoIndexMap(sizeReg);
-      printIndexMap(arq);
-      nextPositionAvailable = nextAvailable(arq, indexMap, sizeReg);
+      printIndexMap();
+      nextPositionAvailable = nextAvailable(arq, sizeReg);
 
       getchar();
       break;
@@ -154,7 +155,7 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
 
 void insertIntoIndexMap(int offset) {
 
-  
+//[wip]
 
 }
 
@@ -164,23 +165,23 @@ void createIndexMap(FILE* arq) {
   int position = 1;
   int size;
 
-  indexMap[0] = 1; // the first register is always at the start of the file after the first byte
+  indexMap[0][0] = 1; // the first register is always at the start of the file after the first byte
 
   printf("\nCreating IndexMap...");
 
   // check if the file is empty
   if ((fscanf (arq, "%04x", &size)) == EOF) {
-    indexMap[0] = -1;
+    indexMap[0][0] = -1;
     return;
   }
 
   while (size != EOF) {
     if((fscanf(arq, "%04x", &size)) != EOF) //Return NULL when reach EOF
     {
-        indexMap[position] = size + 4; // add 4 to account for the next offset slot (int)
-        printf("\nDEBUG: #%d - Value: %d - Size: %d", position, indexMap[position], size);  //Debug Only
+        indexMap[position][0] = size + 4; // add 4 to account for the next offset slot (int)
+        printf("\nDEBUG: #%d - Value: %d - Size: %d", position, indexMap[position][0], size);  //Debug Only
         if (size != EOF) {
-          fseek(arq, indexMap[position], 1); // we skip to next register
+          fseek(arq, indexMap[position][0], 1); // we skip to next register
           position++;
         }
     }
@@ -188,7 +189,7 @@ void createIndexMap(FILE* arq) {
     {
         printf("\nDebug: EOF reached");
         size = -1;
-        indexMap[position] = size;
+        indexMap[position][0] = size;
     }
   }
   printf("\nIndexList created!\n");
@@ -200,20 +201,20 @@ void printIndexMap() {
 
   printf("\nPrinting IndexMap");
 
-  while (indexMap[i] != -1) {
-    printf("\n #%d - Value: %d", i, indexMap[i]);
+  while (indexMap[i][0] != -1) {
+    printf("\n #%d - Value: %d", i, indexMap[i][0]);
     i++;
   }
 
   printf("\nEnd of IndexMap");
 }
 
-int nextAvailable (FILE *arq, int *indexArray, int sizeReg)
+int nextAvailable (FILE *arq, int sizeReg)
 {
   int offset = 0, i = 0;
-  while (indexArray[i] != 0)
+  while (indexMap[i][0] != 0)
   {
-    offset += indexArray[i];
+    offset += indexMap[i][0];
     i++;
   }
   return offset;
@@ -223,7 +224,7 @@ int main()
 {
   FILE *arq;
   contato reg;
-  int sizeReg, opcao = -1;
+  int opcao = -1;
   char buffer[256];
 
   if ( (arq = fopen("dados.dat", "r+")) == NULL )
@@ -239,7 +240,7 @@ int main()
 
   // created and print a IndexList
   createIndexMap(arq);
-  printIndexMap(indexMap);
+  printIndexMap();
   getchar();
 
   while (opcao != 0 ) // menu: 0 to exit
