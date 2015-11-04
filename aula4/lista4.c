@@ -164,6 +164,7 @@ void createIndexMap(FILE* arq) {
 
   int position = 1;
   int size;
+  char available;
 
   indexMap[0][0] = 1; // the first register is always at the start of the file after the first byte
 
@@ -172,6 +173,7 @@ void createIndexMap(FILE* arq) {
   // check if the file is empty
   if ((fscanf (arq, "%04x", &size)) == EOF) {
     indexMap[0][0] = -1;
+    indexMap[0][1] = 42;  // 42 = *
     return;
   }
 
@@ -179,7 +181,9 @@ void createIndexMap(FILE* arq) {
     if((fscanf(arq, "%04x", &size)) != EOF) //Return NULL when reach EOF
     {
         indexMap[position][0] = size + 4; // add 4 to account for the next offset slot (int)
-        printf("\nDEBUG: #%d - Value: %d - Size: %d", position, indexMap[position][0], size);  //Debug Only
+        fscanf(arq, "%c", &available);  // read the validation character
+        indexMap[position][1] = available;
+        printf("\nDEBUG: #%d - Value: %d - Size: %d - Available: %c", position, indexMap[position][0], size, indexMap[position][1]);  //Debug Only
         if (size != EOF) {
           fseek(arq, indexMap[position][0], 1); // we skip to next register
           position++;
@@ -189,7 +193,7 @@ void createIndexMap(FILE* arq) {
     {
         printf("\nDebug: EOF reached");
         size = -1;
-        indexMap[position][0] = size;
+        indexMap[position][0] = size;  // -1 determines the end od the indexMap
     }
   }
   printf("\nIndexList created!\n");
@@ -202,7 +206,7 @@ void printIndexMap() {
   printf("\nPrinting IndexMap");
 
   while (indexMap[i][0] != -1) {
-    printf("\n #%d - Value: %d", i, indexMap[i][0]);
+    printf("\n #%d - Value: %d - Available: %c", i, indexMap[i][0], indexMap[i][1]);
     i++;
   }
 
