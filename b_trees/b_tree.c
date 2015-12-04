@@ -6,7 +6,8 @@
  * on the number of keys that a node can contain.
  * We chose this value randomly,
  */
-#define MINIMUM_DEGREE 4;
+const int MINIMUM_DEGREE = 4;  //2 is the minimum possible
+
 
 const int MIN_NUMBER_KEYS = MINIMUM_DEGREE - 1;
 const int MAX_NUMBER_KEYS = (2 * MINIMUM_DEGREE) - 1;
@@ -45,12 +46,12 @@ int main() {
   FILE* file;
   bTreeNode* root;
 
-  if((file = fopen("bTree.txt", "w+") != NULL) {
+  if( ((file = fopen("bTree.txt", "w+")) != NULL) ){
     puts("The file could not be opened!");
     return 9;
   }
 
-  root = createEmptyTree();
+  root = createEmptyTree(file);
 
   return 0;
 }
@@ -64,7 +65,7 @@ int isLeaf(bTreeNode* node) {
 
   int isLeaf = 0;
 
-  if (node.leaf == 1) {
+  if (node->leaf == 1) {
     isLeaf = 1;
   }
 
@@ -77,7 +78,7 @@ int isLeaf(bTreeNode* node) {
  */
 bTreeNode* createEmptyTree(FILE* file) {
 
-  bTreeNode *root = (*bTreeNode) malloc(sizeof(bTreeNode));
+  bTreeNode *root = (bTreeNode*) malloc(sizeof(bTreeNode));
   root->leaf = 1;
   root->numKeys = 0;
   // TODO: implement the function to write to disk
@@ -101,15 +102,24 @@ bTreeNode* search(bTreeNode* node, int searchValue, int *returnIndex) {
     return NULL;
   }
 
-  while (i <= node.numKeys && searchValue > node.keys[i]) {
+  while (i <= node->numKeys && searchValue > node->keys[i]) {
     i++;
   }
 
-  if (i <= node.numKeys && node.keys[i] == searchValue) {
+  if (i <= node->numKeys && node->keys[i] == searchValue) {
     *returnIndex = i;
     return node;
   } else {
     // TODO: implement readFromDisk to read the next node
   }
+  return node;  //this path wasn't cover with a return
+}
 
+/**
+* Function that write a bTreeNote to a file
+* @return NUL if the operation was unsucessful
+*/
+void writeToDisk(FILE *file, bTreeNode* root) {
+
+  return;
 }

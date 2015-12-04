@@ -29,6 +29,7 @@ void createIndexMap(FILE* arq);
 void printIndexMap();
 int nextAvailable (FILE *arq, int sizeReg);
 void insertIntoIndexMap(int offset);
+void resync (FILE *arq);
 
 
 contato readContact()
@@ -98,6 +99,7 @@ int concatenateReg (contato reg, char *buffer, FILE* arq)
     printf("\n --== 2: Remocao Registro                   ==--");
     printf("\n --== 3: Compactacao do Arquivo             ==--");
     printf("\n --== 4: Debug: Created and Print IndexList ==--");
+    printf("\n --== 5: Debug: Resync dados.dat            ==--");
     printf("\n --== 0: Sair                               ==--");
     printf("\n --===========================================--");
     printf("\nDigite uma opcao: ");
@@ -122,7 +124,7 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
       insertIntoIndexMap(sizeReg);
       printIndexMap();
       nextPositionAvailable = nextAvailable(arq, sizeReg);
-
+      resync(arq);
       getchar();
       break;
     }
@@ -143,7 +145,7 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
       if (indexMap[i][2] == remover )
       {
         indexMap[i][1] = 42; // set * to the desired register
-        fseek(arq,indexMap[i][3],0);  //position the cursor at the register to be removed
+        fseek(arq,indexMap[i][3],0);  //places the cursor at the register to be removed
         fseek(arq, 4, 1);   // move 4 bytes to move to the validation char (@ or *)
         fwrite("*" , 1 , sizeof(char) , arq );  // writes * to remove logically the register
         printf("\nRegistro apagado");
@@ -154,6 +156,7 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
         printf("Registro nao encontrado!");
       }
       fpurge(stdin);   // fflush(stdin)  // no windows
+      resync(arq);
       getchar();
       break;
     }
@@ -171,6 +174,13 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
       getchar();
       break;
     }
+    case 5: // resync
+    {
+      //fclose(arq);
+      //arq = fopen("dados.dat", "r+");
+      resync(arq);
+      break;
+    }
     case 0: // exit
     {
       printf("\nSaindo do programa!");
@@ -184,6 +194,12 @@ void menu(int opcao, contato reg, char *buffer, FILE *arq)
       break;
     }
   }
+}
+
+void resync (FILE *arq)
+{
+  fclose(arq);
+  arq = fopen("dados.dat", "r+");
 }
 
 void insertIntoIndexMap(int offset) {
