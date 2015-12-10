@@ -112,10 +112,10 @@ btclose(){
 
 short getroot(){
  short root;
- long lseek();
- lseek(btfd, 0L, 0);
+ //long lseek();
+ fseek(btfd, 0L, 0);
 
- if (read(btfd, &root, 2) == 0){
+ if (fread(btfd, &root, 2) == 0){
    printf("Error: Unable to get root. \007\n");
    exit(1);
  }
@@ -124,8 +124,8 @@ short getroot(){
 }
 
 putroot(short root){
- lseek(btfd, 0L, 0);
- write(btfd, &root, 2);
+ fseek(btfd, 0L, 0);
+ fwrite(btfd, &root, 2);
 }
 
 short int create_tree(){
@@ -139,25 +139,25 @@ short int create_tree(){
 }
 
 short getpage() {
- long lseek(), addr;
- addr = lseek(btfd, 0L, 2) - 2L;
+ long addr;
+ addr = fseek(btfd, 0L, 2) - 2L;
  return ((short) addr / PAGESIZE);
 }
 
 void btread (short rrn, BTPAGE *page_ptr){
 
- long lseek(), add;
+ long add;
  addr = (long)rrn * (long)PAGESIZE + 2L;
- lseek(btfd, addr, 0);
- return read(btfd, page_ptr, PAGESIZE);
+ fseek(btfd, addr, 0);
+ return fread(btfd, page_ptr, PAGESIZE);
 }
 
 void btwrite(short rrn, BTPAGE *page_ptr){
 
- long lseek(), addr;
+ long addr;
  addr = (long)rrn * (long)PAGESIZE +2L;
- lseek(btfd, addr, 0);
- return(write(btfd, page_ptr, PAGESIZE));
+ fseek(btfd, addr, 0);
+ return(fwrite(btfd, page_ptr, PAGESIZE));
 }
 
 short create_root(char key, short left, short right){
