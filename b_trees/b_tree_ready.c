@@ -13,14 +13,14 @@ typedef struct {
  short int child[MAXKEYS+1]; // ptrs to rrns of descendants
 } BTPAGE;
 
-#define PAGESIZE sizeof(BTPAGE);
+const int PAGESIZE = sizeof(BTPAGE);
 
 short int root; // rrn of root page
-int btfd; // file descriptor of btree file
+FILE *btfd; // file descriptor of btree file  //was int, now is a file
 int infd; // file descriptor of input file
 
 /* prototypes */
-int btclose ();
+void btclose ();
 int btopen ();
 void btread (short rrn, BTPAGE *page_ptr);
 void btwrite (short rrn, BTPAGE *page_ptr);
@@ -28,19 +28,19 @@ short create_root (char key, short left, short right);
 short int create_tree();
 short int getpage ();
 short int getroot ();
-insert (short int rrn, char key, short int *promo_r_child, char *promo_key);
+int insert (short int rrn, char key, short int *promo_r_child, char *promo_key);
 void ins_in_page (char key, short int r_child, BTPAGE *p_page);
 void pageinit (BTPAGE *p_page);
-putroot(short int root);
+void putroot(short int root);
 int search_node (char key, BTPAGE *p_page, short int *pos);
 void split(char key, short int r_child, BTPAGE *p_oldpage, char *promo_key, short int *promo_r_child, BTPAGE *p_newpage);
 
 int main() {
 
   int promoted; // boolean: tells if a promotion from below
-  short int root, // rrn of root page
+  short int root; // rrn of root page
   short int promo_rrn; // rrn promoted from below
-  char promo_key, // key promoted from below
+  char promo_key; // key promoted from below
   char key; // next key to insert in tree
 
   if (btopen()) {
@@ -57,7 +57,7 @@ int main() {
   btclose();
 }
 
-insert(short rrn, char key, short *promo_r_child, char *promo_key){
+int insert(short rrn, char key, short *promo_r_child, char *promo_key){
 
   BTPAGE page; // current page
   BTPAGE newpage; // new page created if split occurs
@@ -99,40 +99,38 @@ insert(short rrn, char key, short *promo_r_child, char *promo_key){
 
 }
 
-btopen() {
-
- btfd = fopen("btree.dat", "r+");
- return (btfd > 0);
-
+int btopen() {
+  btfd = fopen("btree.dat", "r+");
+  return (btfd > 0);
 }
 
-btclose(){
- close(btfd);
+void btclose(){
+ fclose(btfd);
 }
 
 short getroot(){
- short root;
- //long lseek();
- fseek(btfd, 0L, 0);
+  short root;
+  //long lseek();
+  fseek(btfd, 0L, 0);
 
- if (fread(btfd, &root, 2) == 0){
-   printf("Error: Unable to get root. \007\n");
-   exit(1);
- }
+  if (fread(&root, sizeof(short), 1, btfd) == 0){   // ?? if (read(btfd, &root, 2) == 0)
+    printf("Error: Unable to get root. \007\n");
+    return (1);   /// ??? exit(1);
+  }
 
  return (root);
 }
 
-putroot(short root){
+void putroot(short root){
  fseek(btfd, 0L, 0);
- fwrite(btfd, &root, 2);
+ fwrite(&root, 1, sizeof(short), btfd);  //write(btfd, &root, 2);
 }
 
 short int create_tree(){
 
  char key;
- btfd = creat("btree.dat",PMODE);
- close (btfd);
+ btfd = fopen("btree.dat","w+");  // ? btfd = creat("btree.dat",PMODE);
+ fclose (btfd);
  btopen();
  key = getchar();
  return create_root(key, NIL, NIL);
@@ -141,49 +139,38 @@ short int create_tree(){
 short getpage() {
  long addr;
  addr = fseek(btfd, 0L, 2) - 2L;
- return ((short) addr / PAGESIZE);
+ return ((short)addr / PAGESIZE);
 }
 
-void btread (short rrn, BTPAGE *page_ptr){
-
- long add;
- addr = (long)rrn * (long)PAGESIZE + 2L;
- fseek(btfd, addr, 0);
- return fread(btfd, page_ptr, PAGESIZE);
+void btread (short rrn, BTPAGE *page_ptr) {
+  long addr;
+  addr = (long)rrn * (long)PAGESIZE + 2L;
+  fseek(btfd, addr, 0);
+  fread(page_ptr, PAGESIZE, 1, btfd);  //return(read(btfd, page_ptr, PAGESIZE));
+  return;
 }
 
 void btwrite(short rrn, BTPAGE *page_ptr){
-
- long addr;
- addr = (long)rrn * (long)PAGESIZE +2L;
- fseek(btfd, addr, 0);
- return(fwrite(btfd, page_ptr, PAGESIZE));
+  long addr;
+  addr = (long)rrn * (long)PAGESIZE + 2L;
+  fseek(btfd, addr, 0);
+  fwrite(page_ptr, 1, PAGESIZE, btfd);  //return(write(btfd, page_ptr, PAGESIZE));
+  return;
+  //fwrite(str , 1 , sizeof(str) , fp );
 }
 
 short create_root(char key, short left, short right){
-
- BTPAGE page;
-
- short rrn;
-
- rrn = getpage();
-
- pageinit (&page);
-
- page.key[0] = key;
-
- page.child[0] = left;
-
- page.child[1] = right;
-
- page.keycount = 1;
-
- btwrite(rrn, &page);
-
- putroot(rrn);
-
- return(rrn);
-
+  BTPAGE page;
+  short rrn;
+  rrn = getpage();
+  pageinit (&page);
+  page.key[0] = key;
+  page.child[0] = left;
+  page.child[1] = right;
+  page.keycount = 1;
+  btwrite(rrn, &page);
+  putroot(rrn);
+  return(rrn);
 }
 
 void pageinit(BTPAGE *p_page){
