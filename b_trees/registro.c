@@ -7,8 +7,13 @@ int pega_registro(FILE *p_out, char *p_reg);
 int main(void)
 {
   char nome[30], fone[30], registro[90];
-  FILE *out;
-  int cod, tam_reg;
+  FILE *out, *hash;
+  int cod, tam_reg,
+      primo = 31,  // numero predefinido para criarmos a hash table
+      address,     // resultado do mod do Codigo pelo primo escolhido
+      collision = 0;  // indica se houve colisao e qtas tentativas na insercao
+
+
   char *pch;
 
   if ((out = fopen("arq.bin","r+b")) == NULL)
@@ -18,12 +23,22 @@ int main(void)
     out = fopen("arq.bin","w+b");
 	 }
 
+   if ((hash = fopen("hash.bin","r+b")) == NULL)
+ 	 {
+ 		printf("Nao foi possivel abrir a hash table, criando um novo arquivo...");
+ 		getchar();
+    hash = fopen("hash.bin","w+b");
+ 	 }
+
   printf("cod: ");
   scanf("%d",&cod);
   fpurge(stdin);
 
   while (cod != 0)
    {
+      address = cod % primo;
+      printf("[Debug]: Endereco: %d \n", address);
+      fprintf(hash,"%d|",address);  // escreve o endereco no hash table
         printf("nome: ");
         fpurge(stdin);
         gets(nome);
@@ -36,6 +51,14 @@ int main(void)
         tam_reg++;
         fwrite(&tam_reg, sizeof(int), 1, out);
         fwrite(registro, sizeof(char), tam_reg, out);
+
+        printf("[Debug]: Chave %d inserida com sucesso\n", cod);  // TODO confirmar insercao
+
+        if (collision != 0) {   // TODO not working yet
+          printf("Colisao\n");
+          printf("Tentativa %d \n", collision);
+        }
+
 
         printf("\ncod: ");
         scanf("%d",&cod);
