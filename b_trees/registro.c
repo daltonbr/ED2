@@ -72,11 +72,11 @@ int main(void)
 
         for (i = 0; i <= primo; i++)
         {
-          printf("%d\n", i);
+          printf("posicao: %d: ", i);
           printf("%d - ", arquivo[i].code);
           printf("%s - ", arquivo[i].name);
           printf("%s * ", arquivo[i].phone);
-          printf("%d - ", hashTable[i].codigo);
+          printf("hash: %d - ", hashTable[i].codigo);
           printf("%d \n ", hashTable[i].rrn);
         }
         break;
@@ -99,7 +99,7 @@ int main(void)
 
     }
   }
-
+/*
   fseek(out,0,0);
   tam_reg = pega_registro(out,registro);
   while (tam_reg > 0)
@@ -118,6 +118,7 @@ int main(void)
   fclose(out);
 
   getchar();
+  */
 }
 
 int pega_registro(FILE *p_out, char *p_reg)
@@ -188,22 +189,35 @@ int insereRegistro()
 
 int buscaRegistro()
 {
-  int cod, address, i;
+  int cod, address, originalAddress, i;
   printf("cod: ");
   scanf("%d",&cod);
   fpurge(stdin);
 
   address = cod % primo;
+  originalAddress = address;
 
-  // TODO checar se eh o mesmo elemento
-  printf("%d\n", i);
-  printf("%d - ", arquivo[address].code);
-  printf("%s - ", arquivo[address].name);
-  printf("%s \n", arquivo[address].phone);
+  do
+  {
+    if ( arquivo[address].code == cod )
+    {
+      printf("%d\n", i);
+      printf("%d - ", arquivo[address].code);
+      printf("%s - ", arquivo[address].name);
+      printf("%s \n", arquivo[address].phone);
+      return address;
+    }
+    else
+    {
+      address++;
+      if (address == primo) address = 0;  //closes the loop
+    }
 
-  return address;
+  } while (originalAddress != address);
 
   //if not found returns -1
+  printf("Registro nao encontrado!\n");
+  return -1;
 }
 
 void imprimirHash()
@@ -212,8 +226,8 @@ void imprimirHash()
   int i = 0;
   for (i = 0; i <= primo; i++ )
   {
-    fprintf(hash, "%d - ", hashTable[i].codigo);
-    fprintf(hash, "%d \n", hashTable[i].rrn);
+    fprintf(hash, "%d|", hashTable[i].codigo);
+    fprintf(hash, "%d\n", hashTable[i].rrn);
   }
 
 }
@@ -224,8 +238,8 @@ void imprimirArquivo()
   int i = 0;
   for (i = 0; i <= primo; i++ )
   {
-    fprintf(out, "%d - ", arquivo[i].code);
-    fprintf(out, "%s - ", arquivo[i].name);
-    fprintf(out, "%s \n", arquivo[i].phone);
+    fprintf(out, "%d|", arquivo[i].code);
+    fprintf(out, "%s|", arquivo[i].name);
+    fprintf(out, "%s\n", arquivo[i].phone);
   }
 }
