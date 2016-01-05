@@ -189,7 +189,7 @@ int insereRegistro()
 
 int buscaRegistro()
 {
-  int cod, address, originalAddress, i;
+  int cod, address, originalAddress, i, collision = 0;
   printf("cod: ");
   scanf("%d",&cod);
   fpurge(stdin);
@@ -205,11 +205,13 @@ int buscaRegistro()
       printf("%d - ", arquivo[address].code);
       printf("%s - ", arquivo[address].name);
       printf("%s \n", arquivo[address].phone);
+      printf("Chave %d encontrada, endereco %d, %d acesso\n", cod, address, collision+1);
       return address;
     }
     else
     {
       address++;
+      collision++;
       if (address == primo) address = 0;  //closes the loop
     }
 
